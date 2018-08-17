@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+import click
+import logging
+from src import jobs
+from src import logger
+
+@click.command()
+@click.option('--backup', is_flag=True, default=False, help='Performs a jobs backup - Default mode')
+@click.option('--restore', help='Performs a restore')
+@click.option('--token', help='ACL token')
+@click.argument('endpoint')
+def nomadoctor(backup, restore, token, endpoint):
+    job_handler = jobs.Jobs(endpoint, token)
+    if (backup is True and restore is not None) or (backup is False and restore is None):
+        logging.error("Must chose '--backup' or '--restore'")
+    elif restore is None:
+        logging.info("Performing backup")
+        job_handler.backup_jobs()
+    else:
+        logging.info("Performing restore")
+        job_handler.restore_jobs(restore)
+
+if __name__ == '__main__':
+    try:
+        logger.initialize_logger()
+        nomadoctor()
+    except Exception as e:
+        logging.critical("Unhandled exception: {}".format(e), exc_info=True)
+        raise
